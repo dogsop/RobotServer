@@ -35,8 +35,8 @@ def main():
 	while True :
 		message , address = my_socket.recvfrom(8192)
 		print ("message (%s) from : %s" % ( str(message), address[0]))
-		parsed_message = message.decode("utf-8").split('|')
-		if(len(parsed_message) < 3):
+		parsed_message = message.decode("utf-8").split(':')
+		if(len(parsed_message) < 2):
 			print ("bad message")
 		else:
 			for index, item in enumerate(parsed_message):
