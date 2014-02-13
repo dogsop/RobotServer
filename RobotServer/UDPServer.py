@@ -1,13 +1,29 @@
 import socket
-
+import http.client, urllib.parse
 
 def main():
+
+	print ("connecting to google ...")
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	s.connect(("gmail.com",80))
 	local_address = s.getsockname()[0]
 	s.close()
 	print("local address is %s" % local_address)
+
+	print ("posting to gateway.smellydog.net ...")
+	
+	params = urllib.parse.urlencode({'id': 9345, 'action': 'update', 'robotIpAddress': local_address, 'robotWebPort': 9000, 'robotControlPort': 8881})
+	
+	headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+	
+	conn = http.client.HTTPSConnection("gateway.smellydog.net")
+	conn.request("POST", "/robot/index.php", params, headers)
+	response = conn.getresponse()
+	print(response.status, response.reason)
+	data = response.read()
+	print(data)
+	conn.close()
 
 	my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
