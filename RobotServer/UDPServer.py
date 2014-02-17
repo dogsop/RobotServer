@@ -1,4 +1,5 @@
 import socket
+import json
 import http.client, urllib.parse
 
 def main():
@@ -6,7 +7,7 @@ def main():
 	print ("connecting to google ...")
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	s.connect(("gmail.com",80))
+	s.connect(("gmail.com", 80))
 	local_address = s.getsockname()[0]
 	s.close()
 	print("local address is %s" % local_address)
@@ -28,19 +29,28 @@ def main():
 	my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-	my_socket.bind(('',8881))
+	my_socket.bind(('', 8881))
 
 	print ("start service ...")
 
 	while True :
-		message , address = my_socket.recvfrom(8192)
-		print ("message (%s) from : %s" % ( str(message), address[0]))
-		parsed_message = message.decode("utf-8").split(':')
-		if(len(parsed_message) < 2):
-			print ("bad message")
-		else:
-			for index, item in enumerate(parsed_message):
-				print (index, item )
+		message = my_socket.recv(8192)
+		#print ("message (%s) from : %s" % (str(message), address[0]))
+		stringdata = message.decode('utf-8')
+		print(stringdata)
+		print("parsing")
+		try:
+			decoded = json.loads(stringdata)
+			# pretty printing of json-formatted string
+			#print (json.dumps(decoded, sort_keys=True, indent=4))
+			if(decoded['cmd'] == 'setSpeed'):
+				print("this is a setSpeed cmd")
+			elif(decoded['cmd'] == 'displayMsg'):
+				print("this is a displayMsg cmd")
+			else:
+				print("unknown cmd")
+		except (ValueError, KeyError, TypeError):
+			print ("JSON format error")
 
 if __name__ == "__main__" :
-    main()
+	main()
