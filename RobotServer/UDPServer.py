@@ -1,7 +1,35 @@
 import socket
+import serial
 import json
 import http.client, urllib.parse
 
+def sendDisplayMsg(cmdData, ser):
+	try:
+		print("sendDisplayMsg called")
+		msgToSend = "#D%s#" % cmdData['msg']
+		print("msg to send - %s" % msgToSend )
+		ser.write(bytes(msgToSend, 'UTF-8'))
+	except ValueError as e:
+		print("ValueError: {0}".format(e.strerror))
+	except KeyError as e:
+		print("KeyError: {0}".format(e.strerror))
+	except TypeError as e:
+		print("TypeError: {0}".format(e.strerror))
+	
+def sendSetSpeedMsg(cmdData, ser):
+	try:
+		#print("sendSetSpeedMsg called")
+		msgToSend = "#S%+04d%+04d#" % (cmdData['leftSpeed'], cmdData['rightSpeed'])
+		print("msg to send - %s" % msgToSend)
+		ser.write(bytes(msgToSend, 'UTF-8'))
+	except ValueError as e:
+		print("ValueError: {0}".format(e.strerror))
+	except KeyError as e:
+		print("KeyError: {0}".format(e.strerror))
+	except TypeError as e:
+		print("TypeError: {0}".format(e.strerror))
+	
+	
 def main():
 
 	print ("connecting to google ...")
@@ -33,24 +61,33 @@ def main():
 
 	print ("start service ...")
 
+	#ser = serial.Serial('/dev/ttyAMA0', 9600, timeout=1)
+	ser = serial.Serial('/dev/tty1', 9600, timeout=1)
+
 	while True :
 		message = my_socket.recv(8192)
 		#print ("message (%s) from : %s" % (str(message), address[0]))
 		stringdata = message.decode('utf-8')
-		print(stringdata)
-		print("parsing")
+		#print(stringdata)
+		#print("parsing")
 		try:
 			decoded = json.loads(stringdata)
 			# pretty printing of json-formatted string
 			#print (json.dumps(decoded, sort_keys=True, indent=4))
 			if(decoded['cmd'] == 'setSpeed'):
-				print("this is a setSpeed cmd")
+				#print("this is a setSpeed cmd")
+				sendSetSpeedMsg(decoded, ser)
 			elif(decoded['cmd'] == 'displayMsg'):
-				print("this is a displayMsg cmd")
+				#print("this is a displayMsg cmd")
+				sendDisplayMsg(decoded, ser)
 			else:
 				print("unknown cmd")
-		except (ValueError, KeyError, TypeError):
-			print ("JSON format error")
+		except ValueError as e:
+			print("ValueError: {0}".format(e.strerror))
+		except KeyError as e:
+			print("KeyError: {0}".format(e.strerror))
+		except TypeError as e:
+			print("TypeError: {0}".format(e.strerror))
 
 if __name__ == "__main__" :
 	main()
