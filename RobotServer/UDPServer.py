@@ -6,7 +6,7 @@ import http.client, urllib.parse
 def sendDisplayMsg(cmdData, ser):
 	try:
 		print("sendDisplayMsg called")
-		msgToSend = "#D%s#" % cmdData['msg']
+		msgToSend = "#D%s@" % cmdData['msg']
 		print("msg to send - %s" % msgToSend )
 		ser.write(bytes(msgToSend, 'UTF-8'))
 	except ValueError as e:
@@ -19,7 +19,27 @@ def sendDisplayMsg(cmdData, ser):
 def sendSetSpeedMsg(cmdData, ser):
 	try:
 		#print("sendSetSpeedMsg called")
-		msgToSend = "#S%+04d%+04d#" % (cmdData['leftSpeed'], cmdData['rightSpeed'])
+		leftSpeed = cmdData['leftSpeed']
+		
+		leftDirection = 'F'
+		if(leftSpeed < 0):
+			leftDirection = 'R'
+			leftSpeed = leftSpeed * -1
+		leftSpeed = leftSpeed * 2
+		if(leftSpeed > 255):
+			leftSpeed = 255
+
+		rightSpeed = cmdData['rightSpeed']
+		
+		rightDirection = 'F'
+		if(rightSpeed < 0):
+			rightDirection = 'R'
+			rightSpeed = rightSpeed * -1
+		rightSpeed = rightSpeed * 2
+		if(rightSpeed > 255):
+			rightSpeed = 255
+		
+		msgToSend = "#S%c%03d%c%03d@" % (leftDirection, leftSpeed, rightDirection, rightSpeed)
 		print("msg to send - %s" % msgToSend)
 		ser.write(bytes(msgToSend, 'UTF-8'))
 	except ValueError as e:
@@ -61,8 +81,8 @@ def main():
 
 	print ("start service ...")
 
-	#ser = serial.Serial('/dev/ttyAMA0', 9600, timeout=1)
-	ser = serial.Serial('/dev/tty1', 9600, timeout=1)
+	ser = serial.Serial('/dev/ttyAMA0', 9600, timeout=1)
+	#ser = serial.Serial('/dev/tty1', 9600, timeout=1)
 
 	while True :
 		message = my_socket.recv(8192)
