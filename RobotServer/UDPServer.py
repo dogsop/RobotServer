@@ -3,12 +3,21 @@ import serial
 import json
 import http.client, urllib.parse
 
+def sendDisplayText(displayMsg, ser):
+	try:
+		print("sendDisplayText called")
+		msgToSend = "#D%s@" % displayMsg
+		print("msg to send - %s" % msgToSend )
+		ser.write(bytes(msgToSend, 'UTF-8'))
+	except ValueError as e:
+		print("ValueError: {0}".format(e.strerror))
+	except TypeError as e:
+		print("TypeError: {0}".format(e.strerror))
+	
 def sendDisplayMsg(cmdData, ser):
 	try:
 		print("sendDisplayMsg called")
-		msgToSend = "#D%s@" % cmdData['msg']
-		print("msg to send - %s" % msgToSend )
-		ser.write(bytes(msgToSend, 'UTF-8'))
+		sendDisplayText( cmdData['msg'], ser)
 	except ValueError as e:
 		print("ValueError: {0}".format(e.strerror))
 	except KeyError as e:
@@ -52,13 +61,18 @@ def sendSetSpeedMsg(cmdData, ser):
 	
 def main():
 
+	ser = serial.Serial('/dev/ttyAMA0', 9600, timeout=1)
+	#ser = serial.Serial('/dev/tty1', 9600, timeout=1)
+
 	print ("connecting to google ...")
+	sendDisplayText("CONNECTING TO GOOGLE",ser)
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	s.connect(("gmail.com", 80))
 	local_address = s.getsockname()[0]
 	s.close()
 	print("local address is %s" % local_address)
+	sendDisplayText("IP %s" % local_address,ser)
 
 	print ("posting to gateway.smellydog.net ...")
 	
@@ -73,6 +87,7 @@ def main():
 	data = response.read()
 	print(data)
 	conn.close()
+	sendDisplayText("STARTING SERVICE",ser)
 
 	my_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	my_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -80,9 +95,6 @@ def main():
 	my_socket.bind(('', 8881))
 
 	print ("start service ...")
-
-	ser = serial.Serial('/dev/ttyAMA0', 9600, timeout=1)
-	#ser = serial.Serial('/dev/tty1', 9600, timeout=1)
 
 	while True :
 		message = my_socket.recv(8192)
